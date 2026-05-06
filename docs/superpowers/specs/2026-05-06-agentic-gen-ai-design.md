@@ -60,7 +60,7 @@ The bootstrap (`using-gen-ai-superpowers`) detects gen-ai intent from the user's
 
 ### 1. Directory and skill layout
 
-```
+```text
 skills/gen-ai/
 ├── using-gen-ai-superpowers/    # bootstrap; intent detection + routing
 │   └── SKILL.md
@@ -87,7 +87,7 @@ Loaded at session start alongside `using-superpowers` via the same SessionStart 
 **Intent detection rules:**
 
 | Signal | Track |
-|---|---|
+| --- | --- |
 | Keywords: `imagen`, `image`, `video`, `audio`, `generar`, `render`, `shot`, `mood`, `campaign`, `character`, `escena`, `track musical`, `sfx` | gen-ai |
 | Keywords: `función`, `function`, `componente`, `component`, `bug`, `test`, `API`, `deploy`, `refactor`, `commit`, `PR` | code |
 | Mixed or ambiguous | Ask once, do not assume |
@@ -127,7 +127,7 @@ Inherits the question-by-question pattern from core `brainstorming` (one questio
 **Domain-specific question dimensions** (varies by asset type):
 
 | Asset type | Dimensions |
-|---|---|
+| --- | --- |
 | Image | aspect ratio, resolution, style, character consistency, count |
 | Video | aspect, duration, fps, motion intensity, scene count, transitions |
 | Audio | duration, genre, BPM, mood, instrumentation, vocal/instrumental |
@@ -145,7 +145,7 @@ Translates the brief into a discrete asset list. Each asset is one task.
 Each row:
 
 | Field | Notes |
-|---|---|
+| --- | --- |
 | `id` | `asset-01`, `asset-02`, ... |
 | `type` | `image` \| `video` \| `audio` |
 | `prompt` | Full text prompt |
@@ -177,7 +177,7 @@ Subagent-driven, one subagent per asset, dispatched in parallel using the `dispa
 **Error handling:**
 
 | Failure | Response |
-|---|---|
+| --- | --- |
 | Auth fail (`higgsfield auth login` missing) | Abort with clear message; do not retry |
 | Rate limit | Exponential backoff, 3 retries, then defer to next session |
 | Generation produced but quality bad | Not handled here — `reviewing-outputs` decides |
@@ -211,7 +211,7 @@ Final export + metadata.
 
 ### 3. Project state layout
 
-```
+```text
 ./gen-ai-projects/<project-slug>/
 ├── context-bundle.json       (discovering)
 ├── brief.md                   (brainstorming-gen-ai)
@@ -229,7 +229,7 @@ The slug is auto-generated from the brief title in `brief.md` (kebab-case, slugi
 
 ### 4. Data flow
 
-```
+```text
 user message
   → using-gen-ai-superpowers (intent detection)
   → discovering (D → C → B → A)
