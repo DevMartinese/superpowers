@@ -9,8 +9,11 @@ run_claude() {
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
 
-    # Build command
-    local cmd="claude -p \"$prompt\""
+    # Build command. Redirect stdin from /dev/null: without it, `claude -p`
+    # waits on stdin under headless invocation paths (e.g. nested under
+    # `timeout bash -c ...`), which makes test runs hang far past their
+    # configured timeout window.
+    local cmd="claude -p \"$prompt\" </dev/null"
     if [ -n "$allowed_tools" ]; then
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi
