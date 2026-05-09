@@ -12,8 +12,6 @@ if ! command -v timeout >/dev/null 2>&1; then
     if command -v gtimeout >/dev/null 2>&1; then
         TIMEOUT_SHIM_DIR="$(mktemp -d)"
         ln -s "$(command -v gtimeout)" "$TIMEOUT_SHIM_DIR/timeout"
-        PATH="$TIMEOUT_SHIM_DIR:$PATH"
-        export PATH
     elif command -v perl >/dev/null 2>&1; then
         TIMEOUT_SHIM_DIR="$(mktemp -d)"
         cat > "$TIMEOUT_SHIM_DIR/timeout" <<'SHIM'
@@ -31,9 +29,12 @@ waitpid $pid, 0;
 exit($? >> 8);
 SHIM
         chmod +x "$TIMEOUT_SHIM_DIR/timeout"
-        PATH="$TIMEOUT_SHIM_DIR:$PATH"
-        export PATH
+    else
+        echo "error: 'timeout' missing and no fallback ('gtimeout' or 'perl') available" >&2
+        exit 127
     fi
+    export PATH="$TIMEOUT_SHIM_DIR:$PATH"
+    trap 'rm -rf "$TIMEOUT_SHIM_DIR"' EXIT
 fi
 
 source "$SCRIPT_DIR/test-helpers.sh"
