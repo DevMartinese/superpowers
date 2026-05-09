@@ -17,6 +17,14 @@ fi
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
+# Read using-gen-ai-superpowers content (gen-ai track bootstrap)
+gen_ai_bootstrap_path="${PLUGIN_ROOT}/skills/gen-ai/using-gen-ai-superpowers/SKILL.md"
+if [ -f "$gen_ai_bootstrap_path" ]; then
+    using_gen_ai_content=$(cat "$gen_ai_bootstrap_path" 2>&1 || echo "Error reading using-gen-ai-superpowers skill")
+else
+    using_gen_ai_content=""
+fi
+
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
 # faster than the character-by-character loop this replaces.
@@ -31,8 +39,15 @@ escape_for_json() {
 }
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
+using_gen_ai_escaped=$(escape_for_json "$using_gen_ai_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+
+gen_ai_section=""
+if [ -n "$using_gen_ai_content" ]; then
+    gen_ai_section="\n\n---\n\n**Gen-AI Track Bootstrap (loaded automatically when the gen-ai track is installed):**\n\n${using_gen_ai_escaped}"
+fi
+
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}${gen_ai_section}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context (snake_case).
