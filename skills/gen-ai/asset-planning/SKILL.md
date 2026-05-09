@@ -12,9 +12,9 @@ Invoked after `brainstorming-gen-ai` and explicit user approval of `brief.md`.
 ## Decomposition rules
 
 1. Each user-facing deliverable is one or more assets.
-2. If the brief implies a recurring character or style anchor, asset-01 is reserved for creating/loading that anchor (Higgsfield Character or a style-locked seed image). Subsequent assets bind it via `depends_on`.
-3. Assets that share a Higgsfield preset can run in parallel. Assets with `depends_on` chains run sequentially after their dependency completes.
-4. For video with audio companion (V1: independent assets, no cross-modal coherence): generate video and audio as two separate rows. Cross-coherence is V2.
+2. If the brief implies a recurring character or style anchor, asset-01 is reserved for creating/loading that anchor via `higgsfield-soul-id` (face/identity) or a style-locked seed image. Subsequent assets bind it via `depends_on`.
+3. Assets that share a Higgsfield model can run in parallel. Assets with `depends_on` chains run sequentially after their dependency completes.
+4. **Audio is V2.** Higgsfield CLI v0.1.34 does not generate audio output (only image, video, text). If the brief asks for audio, capture it under "Open decisions for V2" in the brief and proceed with image/video only. See `docs/superpowers/notes/higgsfield-invocation.md`.
 
 ## Output: shot-list.md
 
@@ -25,19 +25,18 @@ Save to `./gen-ai-projects/<slug>/shot-list.md`:
 
 ## Estimated total cost: $<total>
 
-| id | type | prompt | higgsfield_skill | presets | params | est_cost_usd | depends_on |
+| id | type | prompt | higgsfield_skill | model | params | est_cost_usd | depends_on |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| asset-01 | image | "Neon cyberpunk cat, profile, studio lighting" | soul | director:noir-01 | aspect=1:1, res=hi | 0.40 | — |
-| asset-02 | video | "Asset-01 cat in rainy alley, slow tracking left" | generate | motion:tracking-left, character:asset-01 | aspect=9:16, dur=6s, fps=30 | 1.20 | asset-01 |
-| asset-03 | audio | "Synthwave loopable backing, 100bpm" | generate (audio mode; verify) | — | dur=6s | 0.30 | — |
+| asset-01 | image | "Neon cyberpunk cat, profile, studio lighting" | higgsfield-product-photoshoot | gpt_image_2 | aspect=1:1, res=hi | 0.40 | — |
+| asset-02 | video | "Asset-01 cat in rainy alley, slow tracking left" | higgsfield-generate | seedance_2 | aspect=9:16, dur=6s, fps=30, character:asset-01 | 1.20 | asset-01 |
 
 ## Dependencies
 
 - asset-02 binds asset-01 as character ref (consistency anchor)
 
-## Notes
+## Deferred to V2
 
-- If `/higgsfield:generate` does not expose audio mode, asset-03 falls back to `hf generate-audio ...` via Bash. Document the working command in producing-assets.
+- Audio backing track (Higgsfield CLI does not generate audio; revisit with a separate provider)
 ```
 
 ## Cost gate

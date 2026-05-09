@@ -42,10 +42,17 @@ Before invoking `discovering`, check if `./gen-ai-projects/` contains a slug tha
 
 ## Auth check
 
-On first gen-ai routing decision, verify Higgsfield CLI auth:
+On first gen-ai routing decision, verify Higgsfield CLI auth. The CLI has no
+`auth status` subcommand; use `auth token` and rely on the exit code (prints
+the token on stdout when authed, errors otherwise):
 
 ```bash
-hf auth status 2>&1 | grep -q "logged in" || echo "NOT_LOGGED_IN"
+hf auth token >/dev/null 2>&1 || echo "NOT_LOGGED_IN"
 ```
 
 If `NOT_LOGGED_IN`, stop and prompt: "Higgsfield CLI not authenticated. Run `higgsfield auth login` and try again." Do not proceed.
+
+If `hf` is not on PATH at all, also surface install instructions:
+`npm install -g @higgsfield/cli` then `higgsfield auth login` then
+`npx skills add higgsfield-ai/skills`. See
+`docs/superpowers/notes/higgsfield-invocation.md` for verified surface.

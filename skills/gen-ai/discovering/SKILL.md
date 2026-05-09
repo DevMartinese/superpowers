@@ -31,15 +31,29 @@ If D is empty or insufficient, ask the user:
 
 Wait for response. Do not invent refs.
 
-### B — Higgsfield Explore
+### B — Higgsfield model + skill catalog
 
-Use Higgsfield CLI to browse the native catalog:
+`@higgsfield/cli@0.1.34` does not expose an `explore` subcommand. Use the
+model list and the installed Higgsfield skill descriptions as the catalog
+instead:
 
 ```bash
-hf explore --query "<vibe tags>" --limit 20
+hf model list --image          # GPT Image 2, Nano Banana 2/Pro, Soul V2/Cinema/Cast/Location, ...
+hf model list --video          # Seedance 2.0, Kling 3.0, ...
+hf generate cost <model> --prompt "<draft>"   # cheap dry-run for budgeting
 ```
 
-Filter to: director presets, motion presets, character cards, audio presets that match `vibe_tags` from D/C. Capture preset IDs — these are the IDs `producing-assets` will bind.
+Also consult the installed Higgsfield skills for the specialist entry points
+they cover (each one's frontmatter `description:` is the catalog entry):
+
+- `higgsfield-generate` — general image/video gen, defaults to GPT Image 2 / Seedance 2.0
+- `higgsfield-product-photoshoot` — brand/product imagery via mode-specific prompt enhancement
+- `higgsfield-soul-id` — train and reuse a Soul Character (face/identity ref)
+- `higgsfield-marketplace-cards` — e-commerce listing visuals with backend compliance
+
+Capture model names and skill names — these are the IDs `producing-assets`
+will route to. See `docs/superpowers/notes/higgsfield-invocation.md` for the
+verified surface.
 
 ### A — Web (last resort)
 
