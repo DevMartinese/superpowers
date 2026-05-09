@@ -5,3 +5,9 @@
 node_modules/
 inspo
 triage/
+
+# Local installs of third-party Claude/Codex/etc. skill packages
+# (e.g. `npx skills add higgsfield-ai/skills`). Vendored locally per dev,
+# never committed.
+.agents/
+skills-lock.json
