@@ -293,4 +293,35 @@ User: `"generá un track lofi de 30 segundos"` → flow runs end-to-end. If `/hi
 
 1. Exact intent-detection keyword list — needs adversarial testing across user phrasings (English + Spanish at minimum, since the user works bilingually)
 2. Cost estimation accuracy — Higgsfield's pricing per-asset needs to be documented in `asset-planning` and kept in sync as their pricing changes
-3. Audio support in official skills — verify on first audio asset; document the working invocation in `producing-assets/SKILL.md`
+3. ~~Audio support in official skills~~ **Resolved 2026-05-09:** Higgsfield CLI v0.1.34 does not expose audio output (only image/video/text). Audio is descoped to V2. See `docs/superpowers/notes/higgsfield-invocation.md`.
+
+## V1.5 / V2 backlog — gaps from MCP surface review (2026-05-09)
+
+V1 targets the official Higgsfield CLI + skills. After verifying that surface (commit `7b3cbe7`) we also reviewed the third-party `higgsfield-mcp@0.2.0` server (`Storyvord/higgsfield-mcp`) as an alternative access path. The MCP exposes capabilities our V1 design doesn't enumerate. The following are **deliberate V1 gaps**, captured here for prioritisation.
+
+### Architectural gaps (route doesn't exist for these intents)
+
+1. **Talking head / lip-sync video.** MCP exposes `generate_talking_head` (Speak v2): portrait image + WAV audio → lip-synced video. A user asking "quiero un avatar hablando" has no path through V1: `brainstorming-gen-ai` has no question dimension for it, `asset-planning` has no asset type, `producing-assets` has no row. **Add as a first-class asset type in V1.5.**
+2. **Image edit / transform of an existing input.** MCP exposes `edit_image_seedream`. V1 treats every asset as a fresh generation. A user asking "tomá esta imagen y cambiale el fondo" has no path. **Add an `edit` mode to image-type rows in V1.5.**
+
+### Path-dependent bugs (V1 silently fails on the MCP path)
+
+3. **Auth check is hard-coded to the CLI path.** `using-gen-ai-superpowers/SKILL.md` runs `hf auth token`; on the MCP path the user is authed via `HF_API_KEY + HF_SECRET` env vars and the bootstrap incorrectly returns NOT_LOGGED_IN. **Make the auth check pluggable: detect MCP via `claude mcp list | grep higgsfield` first, fall back to CLI.**
+4. **Local refs cannot reach the MCP.** MCP requires HTTPS-public source images and exposes `upload_image` (base64 → URL) for that. V1's discovering bundle records local `./refs/*.png` paths and `producing-assets` assumes those work as-is. **Add an upload step in `producing-assets` when the active backend requires public URLs.**
+5. **`discovering` source B doesn't reach the MCP catalog.** When MCP is active, the live catalog lives at the resources `higgsfield://styles` and `higgsfield://motions`. V1's source B reads `higgsfield model list` (CLI). **Branch source B by active backend.**
+
+### Optimisations (V1 works but is sub-optimal)
+
+6. **Webhook callbacks unused.** MCP supports `webhook_url` on every gen tool; V1's `producing-assets` is 100% synchronous polling. For talking-head (2-3min) or large batches, webhooks would let subagents free up. Lower priority.
+7. **No cancellation path.** MCP exposes `cancel_request`; V1 has no abort flow when a late cost-gate trip or user mind-change occurs. Add in `producing-assets` and surface from `reviewing-outputs`.
+
+### Scope guidance for V1.5 plan
+
+If a V1.5 plan is written, the rentable order is:
+1. Gap #3 (auth pluggable) — small, unblocks the MCP path entirely
+2. Gaps #1 + #2 (talking-head + image-edit asset types) — the largest expansion of creative surface covered
+3. Gap #4 (upload step) — required to actually run V1.5 on the MCP path with local refs
+4. Gap #5 (catalog branching) — nice-to-have once MCP path is live
+5. Gaps #6 + #7 (webhooks, cancellation) — quality-of-life
+
+The MCP review notes are at `docs/superpowers/notes/higgsfield-invocation.md` (CLI surface) and inline in commit `<this commit>` (MCP surface). No code changes were made to V1 from this review.
