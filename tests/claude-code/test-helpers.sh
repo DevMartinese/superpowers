@@ -1,6 +1,40 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+# Provide a portable `timeout` shim if the system lacks one (e.g. stock macOS).
+# run_claude (below) depends on `timeout`; this ensures every test that sources
+# this helper gets a working `timeout` regardless of platform. Idempotent:
+# no-op when `timeout` is already on PATH. Sets up at most once per shell.
+if [ -z "${__TEST_HELPERS_TIMEOUT_SHIM_READY:-}" ] && ! command -v timeout >/dev/null 2>&1; then
+    if command -v gtimeout >/dev/null 2>&1; then
+        __TEST_HELPERS_TIMEOUT_SHIM_DIR="$(mktemp -d)"
+        ln -s "$(command -v gtimeout)" "$__TEST_HELPERS_TIMEOUT_SHIM_DIR/timeout"
+    elif command -v perl >/dev/null 2>&1; then
+        __TEST_HELPERS_TIMEOUT_SHIM_DIR="$(mktemp -d)"
+        cat > "$__TEST_HELPERS_TIMEOUT_SHIM_DIR/timeout" <<'SHIM'
+#!/usr/bin/env perl
+# Minimal `timeout SECONDS CMD ARGS...` shim using perl's alarm.
+use strict; use warnings;
+my $secs = shift @ARGV;
+die "usage: timeout SECONDS CMD ...\n" unless defined $secs and @ARGV;
+my $pid = fork();
+die "fork: $!" unless defined $pid;
+if ($pid == 0) { exec @ARGV or die "exec: $!"; }
+local $SIG{ALRM} = sub { kill 'TERM', $pid; sleep 2; kill 'KILL', $pid; exit 124; };
+alarm $secs;
+waitpid $pid, 0;
+exit($? >> 8);
+SHIM
+        chmod +x "$__TEST_HELPERS_TIMEOUT_SHIM_DIR/timeout"
+    else
+        echo "test-helpers.sh: 'timeout' missing and no fallback ('gtimeout' or 'perl') available" >&2
+        return 127 2>/dev/null || exit 127
+    fi
+    export PATH="$__TEST_HELPERS_TIMEOUT_SHIM_DIR:$PATH"
+    trap 'rm -rf "${__TEST_HELPERS_TIMEOUT_SHIM_DIR:-}"' EXIT
+fi
+__TEST_HELPERS_TIMEOUT_SHIM_READY=1
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
